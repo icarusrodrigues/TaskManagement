@@ -1,0 +1,16 @@
+spring:
+  profiles:
+    active: test
+  flyway:
+    enabled: false
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:db;DB_CLOSE_DELAY=-1
+    username: sa
+    password: sa
+hibernate:
+  show_sql: false
+
+project:
+  jwtSecret: qsafikhtnfvnxpgrsowxiytmmxunumrxpzjwlukvncfaknsrneuftixyeyzzmdahvwpfwyvnyrfmbtsvrkhpathnpsdwdldblxentxrghadyoaeqnqqaqkxilwuaindh
+  jwtExpirationMs: 3600000

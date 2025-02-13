@@ -1,0 +1,23 @@
+spring:
+  profiles:
+    active: develop
+  application:
+    name: task-management
+  flyway:
+    enabled: true
+  datasource:
+    url: jdbc:postgresql://localhost:5432/database
+    username: postgres
+    password: postgres
+  jpa:
+    show-sql: false
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format-sql: true
+
+project:
+  jwtSecret: qsafikhtnfvnxpgrsowxiytmmxunumrxpzjwlukvncfaknsrneuftixyeyzzmdahvwpfwyvnyrfmbtsvrkhpathnpsdwdldblxentxrghadyoaeqnqqaqkxilwuaindh
+  jwtExpirationMs: 3600000

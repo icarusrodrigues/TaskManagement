@@ -21,7 +21,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.NoSuchElementException;
 
-@CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("auth")
 public class AuthController {

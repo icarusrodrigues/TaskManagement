@@ -4,6 +4,9 @@ import com.task.management.api.dto.TaskDto;
 import com.task.management.api.enums.EnumMessage;
 import com.task.management.api.enums.TaskStatus;
 import com.task.management.api.enums.UserType;
+import com.task.management.api.exceptions.AlreadyFinishedTaskException;
+import com.task.management.api.exceptions.AlreadyStartedTaskException;
+import com.task.management.api.exceptions.NonStartedTaskException;
 import com.task.management.api.response.ResponseHandler;
 import com.task.management.api.security.services.UserDetailsImpl;
 import com.task.management.api.service.ICrudService;
@@ -28,7 +31,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.NoSuchElementException;
 
-@CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("tasks")
 public class TaskController extends CrudController<TaskDto> {
@@ -146,12 +148,13 @@ public class TaskController extends CrudController<TaskDto> {
     @GetMapping("/my-tasks")
     @PreAuthorize("hasAnyAuthority('USER', 'ADMIN')")
     public ResponseEntity<?> listTasksByUser(@RequestParam(name = "direction", defaultValue = "ASC") Sort.Direction direction,
-                                             @RequestParam(name = "property", defaultValue = "dueDate") String property) {
+                                             @RequestParam(name = "property", defaultValue = "dueDate") String property,
+                                             @RequestParam(name = "status", defaultValue = "PENDING") TaskStatus status) {
         var user = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         var foundUser = userService.findByUsername(user.getUsername());
 
         try {
-            return ResponseHandler.generateResponse(ResponseEntity.ok(service.listAllByUser(foundUser, direction, property)), EnumMessage.GET_MESSAGE.message());
+            return ResponseHandler.generateResponse(ResponseEntity.ok(service.listAllByUser(foundUser, direction, property, status)), EnumMessage.GET_MESSAGE.message());
         } catch (PropertyReferenceException ignored) {
             return ResponseHandler.generateResponse(ResponseEntity.badRequest().build(), EnumMessage.PROPERTY_NOT_FOUND_MESSAGE.message());
         }
@@ -298,6 +301,42 @@ public class TaskController extends CrudController<TaskDto> {
 
         } catch (NoSuchElementException ignored) {
             return ResponseHandler.generateResponse(ResponseEntity.notFound().build(), EnumMessage.ENTITY_NOT_FOUND_MESSAGE.message());
+        }
+    }
+
+    @PutMapping("/start/{id}")
+    public ResponseEntity<?> startTask(@PathVariable("id") Long id) {
+        var user = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        var foundUser = userService.findByUsername(user.getUsername());
+
+        try {
+            var foundTask = service.find(id);
+
+            if (foundTask.getUserId().equals(foundUser.getId()) || foundUser.getUserType().equals(UserType.ADMIN))
+                return ResponseHandler.generateResponse(ResponseEntity.ok(service.beginTask(foundTask)), EnumMessage.PUT_MESSAGE.message());
+
+            return ResponseHandler.generateResponse(ResponseEntity.badRequest().build(), EnumMessage.CANT_ACCESS_ENTITY_MESSAGE.message());
+
+        } catch (AlreadyStartedTaskException | AlreadyFinishedTaskException error) {
+            return ResponseHandler.generateResponse(ResponseEntity.badRequest().build(), error.getMessage());
+        }
+    }
+
+    @PutMapping("/complete/{id}")
+    public ResponseEntity<?> completeTask(@PathVariable("id") Long id) {
+        var user = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        var foundUser = userService.findByUsername(user.getUsername());
+
+        try {
+            var foundTask = service.find(id);
+
+            if (foundTask.getUserId().equals(foundUser.getId()) || foundUser.getUserType().equals(UserType.ADMIN))
+                return ResponseHandler.generateResponse(ResponseEntity.ok(service.completeTask(foundTask)), EnumMessage.PUT_MESSAGE.message());
+
+            return ResponseHandler.generateResponse(ResponseEntity.badRequest().build(), EnumMessage.CANT_ACCESS_ENTITY_MESSAGE.message());
+
+        } catch (NonStartedTaskException | AlreadyFinishedTaskException error) {
+            return ResponseHandler.generateResponse(ResponseEntity.badRequest().build(), error.getMessage());
         }
     }
 }

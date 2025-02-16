@@ -2,6 +2,10 @@ package com.task.management.api.service;
 
 import com.task.management.api.dto.TaskDto;
 import com.task.management.api.dto.UserDto;
+import com.task.management.api.enums.TaskStatus;
+import com.task.management.api.exceptions.AlreadyFinishedTaskException;
+import com.task.management.api.exceptions.AlreadyStartedTaskException;
+import com.task.management.api.exceptions.NonStartedTaskException;
 import com.task.management.api.mapper.GenericMapper;
 import com.task.management.api.mapper.UserMapper;
 import com.task.management.api.model.Task;
@@ -48,8 +52,30 @@ public class TaskService extends CrudService<TaskDto, Task> {
         return mapper.toDto(repository.save(mapper.toEntity(dto)));
     }
 
-    public List<TaskDto> listAllByUser(UserDto user, Sort.Direction direction, String property) {
-        return taskRepository.findAllByUser(userMapper.toEntity(user), Sort.by(direction, property))
+    public List<TaskDto> listAllByUser(UserDto user, Sort.Direction direction, String property, TaskStatus status) {
+        return taskRepository.findAllByUserAndStatus(userMapper.toEntity(user), Sort.by(direction, property), status)
                 .stream().map(mapper::toDto).toList();
+    }
+
+    public TaskDto beginTask(TaskDto task) {
+        if (task.getStatus() == TaskStatus.IN_PROGRESS)
+            throw new AlreadyStartedTaskException();
+
+        if (task.getStatus() == TaskStatus.COMPLETED)
+            throw new AlreadyFinishedTaskException();
+
+        task.setStatus(TaskStatus.IN_PROGRESS);
+        return mapper.toDto(repository.save(mapper.toEntity(task)));
+    }
+
+    public TaskDto completeTask(TaskDto task) {
+        if (task.getStatus() == TaskStatus.PENDING)
+            throw new NonStartedTaskException();
+
+        if (task.getStatus() == TaskStatus.COMPLETED)
+            throw new AlreadyFinishedTaskException();
+
+        task.setStatus(TaskStatus.COMPLETED);
+        return mapper.toDto(repository.save(mapper.toEntity(task)));
     }
 }

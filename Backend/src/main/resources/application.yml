@@ -21,3 +21,7 @@ spring:
 project:
   jwtSecret: qsafikhtnfvnxpgrsowxiytmmxunumrxpzjwlukvncfaknsrneuftixyeyzzmdahvwpfwyvnyrfmbtsvrkhpathnpsdwdldblxentxrghadyoaeqnqqaqkxilwuaindh
   jwtExpirationMs: 3600000
+
+server:
+  servlet:
+    context-path: /task-management/api

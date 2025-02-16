@@ -22,7 +22,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.NoSuchElementException;
 
-@CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("users")
 public class UserController extends CrudController<UserDto> {

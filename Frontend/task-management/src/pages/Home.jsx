@@ -15,10 +15,10 @@ const Home = () => {
         <>
             <div className="bg-primary-500 h-full max-w-full min-h-screen flex flex-column p-4">
                 <div className="flex flex-row justify-content-between align-items-center">
-                    <h1 className="p-2">Lista de tarefas</h1>
+                    <h1 className="p-2">Task List</h1>
                     <div className='flex flex-row w-8 md:w-4 lg:w-3 p-5 justify-content-between'>
                         <Button 
-                            label='Cadastrar nova tarefa'
+                            label='Create new Task'
                             type="button"
                             style={{color: 'var(--white)'}}
                             onClick={() => {

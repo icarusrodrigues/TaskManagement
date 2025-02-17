@@ -21,7 +21,7 @@ const Tasks = (props) => {
 
     function formatDate(date) {
         const formattedDate = new Date(date);
-        return formattedDate.toLocaleString();
+        return `${formattedDate.getDate()}/${String(formattedDate.getMonth() + 1).padStart(2, '0')}/${formattedDate.getFullYear()} ${formattedDate.getHours()}:${String(formattedDate.getMinutes()).padStart(2, '0')}`;
     }
 
     async function deleteTask(id) {
@@ -69,27 +69,26 @@ const Tasks = (props) => {
                                     <h3 className="mt-0 mb-0 white-space-nowrap overflow-hidden text-overflow-ellipsis">{task.title}</h3>
                                     <Button className='hover:bg-red-500 border-none border-round-sm' icon="pi pi-trash" onClick={() => {deleteTask(task.id)}}/>
                                 </div>
-                                <p className="mt-0 text-primary">{task.description}</p>
+                                <p className="mt-0 overflow-hidden max-h-8rem text-primary">{task.description}</p>
                                 <h6 className="mt-0 text-primary">{task.status}</h6>
                                 <div className='flex flex-row justify-content-between align-items-center'>
-                                    <p className="mt-0 text-primary">{formatDate(task.dueDate)}</p>
+                                    <p className="my-0 text-primary">{formatDate(task.dueDate)}</p>
                                     {(() => {
                                         switch (props.name) {
-                                        case 'Pending':
-                                            return <Button 
-                                            label='Iniciar' className='hover:bg-green-500 border-none border-round-sm'
-                                            onClick={() => {
-                                                startTask(task.id)
-                                            }}/>
-                                        case 'In Progress':
                                             case 'Pending':
                                                 return <Button 
-                                                label='Completar' className='hover:bg-green-500 border-none border-round-sm'
+                                                label='Start' className='hover:bg-green-500 border-none border-round-sm'
+                                                onClick={() => {
+                                                    startTask(task.id)
+                                                }}/>
+                                            case 'In Progress':
+                                                return <Button 
+                                                label='Complete' className='hover:bg-green-500 border-none border-round-sm'
                                                 onClick={() => {
                                                     completeTask(task.id)
                                                 }}/>
-                                        default:
-                                            return null
+                                            default:
+                                                return null
                                         }
                                     })()}
                                 </div>

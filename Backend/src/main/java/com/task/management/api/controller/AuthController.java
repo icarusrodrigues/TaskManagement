@@ -61,7 +61,7 @@ public class AuthController {
             }
 
         } catch (NoSuchElementException exception) {
-            return ResponseHandler.generateResponse(ResponseEntity.badRequest().build(), "User or password doesn't match!");
+            return ResponseHandler.generateResponse(ResponseEntity.badRequest().build(), "User not found!");
         }
     }
 

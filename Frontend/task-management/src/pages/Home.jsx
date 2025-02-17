@@ -7,6 +7,7 @@ import { InputTextarea } from 'primereact/inputtextarea';
 import { OverlayPanel } from 'primereact/overlaypanel';
 import { useNavigate } from 'react-router-dom';
 import { Context } from '../contexts/AuthContext';
+import { ConfirmDialog } from 'primereact/confirmdialog';
 import Cookies from 'js-cookie';
 import Tasks from '../components/Tasks';
 import { API } from '../services';
@@ -14,16 +15,21 @@ import { API } from '../services';
 const Home = () => {
 
     const op = useRef(null);
-
     const navigate = useNavigate();
-
-    const [datetime24h, setDateTime24h] = useState(new Date());
-
+    const [datetime24h, setDateTime24h] = useState(null);
     const { setLogged } = useContext(Context);
-
     const {register, handleSubmit} = useForm();
+
+    function formatDateToServer(date) {
+        const formattedDate = new Date(date);
+        return `${formattedDate.getFullYear()}-${String(formattedDate.getMonth() + 1).padStart(2, '0')}-${formattedDate.getDate()}T${formattedDate.getHours()}:${String(formattedDate.getMinutes()).padStart(2, '0')}:00`;
+    }
     
     async function createTask(task) {
+        if (datetime24h) {
+            task.dueDate = formatDateToServer(datetime24h);
+        }
+
         await API.post(`/tasks`, task, {
             headers: {
                 Authorization: `Bearer ${Cookies.get("token")}`
@@ -35,8 +41,9 @@ const Home = () => {
     return ( 
         <>
             <div className="bg-primary-500 h-full max-w-full min-h-screen flex flex-column p-4">
-                <div className="flex flex-row justify-content-between align-items-center">
+                <header className="flex flex-row justify-content-between align-items-center">
                     <h1 className="p-2">Task List</h1>
+                    
                     <div className='flex flex-row w-8 md:w-4 lg:w-3 p-5 justify-content-between'>
                         <Button 
                             label='Create new Task'
@@ -54,9 +61,9 @@ const Home = () => {
                                 navigate("/");}}
                             className='bg-blue-800 min-w-max'/>
                     </div>
-                </div>
+                </header>
 
-                <OverlayPanel ref={op} showCloseIcon id="overlaypanel" style={{width: '450px'}}>
+                <OverlayPanel ref={op} id="overlaypanel" style={{width: '450px'}}>
                     <div className="flex flex-column">
                         <h2 className="p-2">Create a new Task</h2>
                         <form onSubmit={handleSubmit(createTask)}>
@@ -84,11 +91,10 @@ const Home = () => {
                                 id="dueDate" 
                                 name="dueDate" 
                                 className='mb-3 w-full'
-                                dateFormat="dd/mm/yy"
-                                {...register('dueDate')} 
+                                dateFormat='dd/mm/yy'
                                 value={datetime24h}
                                 onChange={(e) => setDateTime24h(e.value)}
-                                showIcon showTime hourFormat="24"/>
+                                showIcon showTime hourFormat='24'/>
 
                             <div className="flex flex-column">
                                 <Button 
@@ -100,11 +106,14 @@ const Home = () => {
                     </div>
                 </OverlayPanel>
                 
-                <div className="flex flex-row justify-content-between">
-                    <Tasks name={'Pending'}/>
-                    <Tasks name={'In Progress'}/>
-                    <Tasks name={'Completed'}/>
-                </div>
+                <main>
+                    <ConfirmDialog/>
+                    <section className="flex flex-row justify-content-between">
+                        <Tasks name={'Pending'}/>
+                        <Tasks name={'In Progress'}/>
+                        <Tasks name={'Completed'}/>
+                    </section>
+                </main>
             </div>
         </>
      );

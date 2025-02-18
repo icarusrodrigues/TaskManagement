@@ -1,7 +1,8 @@
-import { useContext, useRef, useState } from 'react';
+import { useContext, useRef, useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from 'primereact/button';
 import { Calendar } from 'primereact/calendar';
+import { Dropdown } from 'primereact/dropdown';
 import { InputText } from "primereact/inputtext";
 import { InputTextarea } from 'primereact/inputtextarea';
 import { OverlayPanel } from 'primereact/overlaypanel';
@@ -9,6 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import { Context } from '../contexts/AuthContext';
 import { ConfirmDialog } from 'primereact/confirmdialog';
 import Cookies from 'js-cookie';
+import FilteredTasks from '../components/FilteredTasks';
 import Tasks from '../components/Tasks';
 import { API } from '../services';
 
@@ -16,9 +18,18 @@ const Home = () => {
 
     const op = useRef(null);
     const navigate = useNavigate();
-    const [datetime24h, setDateTime24h] = useState(null);
     const { setLogged } = useContext(Context);
     const {register, handleSubmit} = useForm();
+    const [datetime24h, setDateTime24h] = useState(null);
+    const [selectedStatus, setSelectedStatus] = useState('');
+    const [tasks, setTasks] = useState([]);
+
+    const status = [
+        {name: 'Pending', code: 'PENDING'},
+        {name: 'In Progress', code: 'IN_PROGRESS'},
+        {name: 'Completed', code: 'COMPLETED'},
+        {name: 'All', code: 'ALL'}
+    ];
 
     function formatDateToServer(date) {
         const formattedDate = new Date(date);
@@ -35,15 +46,65 @@ const Home = () => {
                 Authorization: `Bearer ${Cookies.get("token")}`
             }
         });
-        window.location.reload();
+
+        searchTasks();
     }
+
+    async function searchTasks() {        
+        const finalTasks = [
+            {name: 'Pending', code: 'PENDING', tasks: []},
+            {name: 'In Progress', code: 'IN_PROGRESS', tasks: []},
+            {name: 'Completed', code: 'COMPLETED', tasks: []}
+        ];
+        
+        await Promise.all(finalTasks.map(async (finalTask) => {
+            const request = await API.get(`/tasks/my-tasks?status=${finalTask.code}`, {
+                    headers: {
+                        Authorization: `Bearer ${Cookies.get('token')}`
+                    }
+                }
+            );
+
+            finalTask.tasks = request.data.data;
+        }));
+
+        setTasks([...finalTasks]);
+        return finalTasks;
+    }
+
+    async function filteredSearchTasks(actualStatus) {
+        if (!actualStatus || actualStatus === 'ALL') {
+            await searchTasks();
+            return;
+        }
+        const request = await API.get(`/tasks/my-tasks?status=${actualStatus}`, {
+            headers: {
+                Authorization: `Bearer ${Cookies.get('token')}`
+            }
+        });
+        setTasks(request.data.data);
+    }
+
+    useEffect(() => {
+        searchTasks();
+    }, []);
 
     return ( 
         <>
             <div className="bg-primary-500 h-full max-w-full min-h-screen flex flex-column p-4">
                 <header className="flex flex-row justify-content-between align-items-center">
-                    <h1 className="p-2">Task List</h1>
-                    
+                    <div>
+                        <h1 className="p-2">Task List</h1>
+                        <Dropdown value={selectedStatus} 
+                        onChange={async (e) => {
+                            setSelectedStatus(e.value);
+                            await filteredSearchTasks(e.value.code);
+                        }} options={status} optionLabel="name" 
+                        placeholder="Select a Status" className="w-full md:w-14rem" 
+                        checkmark={true} 
+                        highlightOnSelect={false} />
+                    </div>
+
                     <div className='flex flex-row w-8 md:w-4 lg:w-3 p-5 justify-content-between'>
                         <Button 
                             label='Create new Task'
@@ -76,25 +137,37 @@ const Home = () => {
                                 {...register('title', {required: true})}
                             />
 
-                            <label style={{color: 'var(--blue-900)'}} htmlFor="description" className='block uppercase font-bold text-sm mb-1'>Description</label>
-                            <InputTextarea
-                                id="description" 
-                                name="description" 
-                                className='mb-3 w-full bg-white'
-                                style={{color: `var(--surface-0)`}}
-                                {...register('description', {required: true})}
-                                rows={8}
-                            />
+                            <div className='mb-3'>
+                                <label style={{color: 'var(--blue-900)'}} htmlFor="description" className='block uppercase font-bold text-sm mb-1'>Description</label>
+                                <InputTextarea
+                                    id="description" 
+                                    name="description" 
+                                    className='w-full bg-white'
+                                    aria-describedby="description-help" 
+                                    style={{color: `var(--surface-0)`}}
+                                    {...register('description', {required: true})}
+                                    rows={8} 
+                                />
+                                <small id="description-help">
+                                    Please, describe your task.
+                                </small>
+                            </div>
 
-                            <label style={{color: 'var(--blue-900)'}} htmlFor="dueDate" className='block uppercase font-bold text-sm mb-1'>Due Date</label>
-                            <Calendar
-                                id="dueDate" 
-                                name="dueDate" 
-                                className='mb-3 w-full'
-                                dateFormat='dd/mm/yy'
-                                value={datetime24h}
-                                onChange={(e) => setDateTime24h(e.value)}
-                                showIcon showTime hourFormat='24'/>
+                            <div className='mb-3'>
+                                <label style={{color: 'var(--blue-900)'}} htmlFor="dueDate" className='block uppercase font-bold text-sm mb-1'>Due Date</label>
+                                <Calendar
+                                    id="dueDate" 
+                                    name="dueDate" 
+                                    className='w-full'
+                                    dateFormat='dd/mm/yy'
+                                    aria-describedby="due-date-help" 
+                                    value={datetime24h}
+                                    onChange={(e) => setDateTime24h(e.value)}
+                                    showIcon showTime hourFormat='24'/>
+                                    <small id="due-date-help">
+                                        If you do not specify an expiration date, an expiration of 1 week will automatically be added.
+                                    </small>
+                            </div>
 
                             <div className="flex flex-column">
                                 <Button 
@@ -109,9 +182,23 @@ const Home = () => {
                 <main>
                     <ConfirmDialog/>
                     <section className="flex flex-row justify-content-between">
-                        <Tasks name={'Pending'}/>
-                        <Tasks name={'In Progress'}/>
-                        <Tasks name={'Completed'}/>
+                        {(() => {
+                            switch (selectedStatus.code) {
+                                case 'PENDING':
+                                case 'IN_PROGRESS':
+                                case 'COMPLETED':
+                                    return <FilteredTasks name={selectedStatus.name} code={selectedStatus.code} tasks={tasks} searchTasks={filteredSearchTasks}/>;
+                                default:
+                                    return (<>
+                                        {
+                                            tasks.map((task) => (
+                                                <Tasks name={task.name} tasks={task.tasks} searchTasks={searchTasks}/>
+                                            ))
+                                        }
+                                    </>)
+                            }
+                        })()}   
+                        
                     </section>
                 </main>
             </div>

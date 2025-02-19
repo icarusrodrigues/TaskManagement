@@ -111,7 +111,7 @@ const Home = () => {
                             type="button"
                             style={{color: 'var(--white)'}}
                             onClick={(e) => {op.current.toggle(e)}}
-                            className='bg-blue-600'/>
+                            className='bg-blue-900 hover:bg-blue-300'/>
                         <Button 
                             label='Logout'
                             type="button"
@@ -120,7 +120,7 @@ const Home = () => {
                                 Cookies.remove("token");
                                 setLogged(false); 
                                 navigate("/");}}
-                            className='bg-blue-600 min-w-max'/>
+                            className='bg-blue-900 hover:bg-red-600 min-w-max'/>
                     </div>
                 </header>
 
@@ -181,7 +181,7 @@ const Home = () => {
                 
                 <main className='p-4 bg-white'>
                     <ConfirmDialog/>
-                    <section className="flex flex-row justify-content-evenly">
+                    <section className="flex flex-row justify-content-between">
                         {(() => {
                             switch (selectedStatus.code) {
                                 case 'PENDING':

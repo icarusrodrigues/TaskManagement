@@ -3,7 +3,7 @@ import Task from './Task';
 const Tasks = (props) => {
 
     return (<>
-        <div className='flex flex-column w-3 shadow-3 px-2'>
+        <div className='flex flex-column w-3 shadow-3 px-4'>
             <h2 className='p-2' style={{color: `var(--blue-900)`, textDecoration: 'underline'}}>
                 {props.name}
             </h2>

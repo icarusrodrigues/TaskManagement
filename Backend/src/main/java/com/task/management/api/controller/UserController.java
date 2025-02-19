@@ -87,14 +87,15 @@ public class UserController extends CrudController<UserDto> {
                                         "id": 0,
                                         "username": "Some User",
                                         "email": "some@email",
-                                        "userType": "PERSONAL",
-                                        "team": "Some Team",
-                                        "tasks": [
+                                        "userType": "USER",
+                                        "createdTasks": [
                                             {
                                                 "id": 0,
                                                 "title": "Some Task",
                                                 "description": "Some Description",
-                                                "dueDate": "2024-03-22T00:00:00"
+                                                "dueDate": "2024-03-22T00:00:00",
+                                                "status": "PENDING",
+                                                "userId": 0
                                             }
                                         ]
                                     }
@@ -133,9 +134,8 @@ public class UserController extends CrudController<UserDto> {
                                     "id": 0,
                                     "username": "Some User",
                                     "email": "some@email",
-                                    "userType": "PERSONAL",
-                                    "team": "Some Team",
-                                    "tasks": []
+                                    "userType": "USER",
+                                    "createdTasks": []
                                 },
                                 "message": "Data saved successfully!",
                                 "status": 201
@@ -169,9 +169,8 @@ public class UserController extends CrudController<UserDto> {
                                     "id": 0,
                                     "username": "Some User",
                                     "email": "some@email",
-                                    "userType": "PERSONAL",
-                                    "team": "Some Team",
-                                    "tasks": []
+                                    "userType": "USER",
+                                    "createdTasks": []
                                 },
                                 "message": "Data updated successfully!",
                                 "status": 200

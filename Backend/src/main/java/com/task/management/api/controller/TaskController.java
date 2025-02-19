@@ -55,7 +55,9 @@ public class TaskController extends CrudController<TaskDto> {
                                     "id": 0,
                                     "title": "Some Task",
                                     "description": "Some Description",
-                                    "dueDate": "2024-03-22T00:00:00"
+                                    "dueDate": "2025-02-19T00:00:00",
+                                    "status": "PENDING",
+                                    "userId": 0
                                 },
                                 "message": "Data recovered successfully!",
                                 "status": 200
@@ -100,7 +102,9 @@ public class TaskController extends CrudController<TaskDto> {
                                         "id": 0,
                                         "title": "Some Task",
                                         "description": "Some Description",
-                                        "dueDate": "2024-03-22T00:00:00"
+                                        "dueDate": "2025-02-19T00:00:00",
+                                        "status": "PENDING",
+                                        "userId": 0
                                     }
                                 ],
                                 "message": "Data recovered successfully!",
@@ -138,7 +142,9 @@ public class TaskController extends CrudController<TaskDto> {
                                         "id": 0,
                                         "title": "Some Task",
                                         "description": "Some Description",
-                                        "dueDate": "2024-03-22T00:00:00"
+                                        "dueDate": "2025-02-19T00:00:00",
+                                        "status": "PENDING",
+                                        "userId": 0
                                     }
                                 ],
                                 "message": "Data recovered successfully!",
@@ -170,7 +176,9 @@ public class TaskController extends CrudController<TaskDto> {
                                     "id": 0,
                                     "title": "Some Task",
                                     "description": "Some Description",
-                                    "dueDate": "2024-03-22T00:00:00"
+                                    "dueDate": "2025-02-19T00:00:00",
+                                    "status": "PENDING",
+                                    "userId": 0
                                 },
                                 "message": "Data saved successfully!",
                                 "status": 201
@@ -210,7 +218,9 @@ public class TaskController extends CrudController<TaskDto> {
                                     "id": 0,
                                     "title": "Some Task",
                                     "description": "Some Description",
-                                    "dueDate": "2024-03-22T00:00:00"
+                                    "dueDate": "2025-02-19T00:00:00",
+                                    "status": "PENDING",
+                                    "userId": 0
                                 },
                                 "message": "Data updated successfully!",
                                 "status": 200
@@ -304,6 +314,48 @@ public class TaskController extends CrudController<TaskDto> {
         }
     }
 
+    @Operation(summary = "Start a Task", description = "Start the task with the provided ID.")
+    @ApiResponses( value = {
+            @ApiResponse(responseCode = "200",
+                    description = "Task started",
+                    content = @Content(examples = @ExampleObject(value = """
+                            {
+                                "data": {
+                                    "id": 0,
+                                    "title": "Some Task",
+                                    "description": "Some Description",
+                                    "dueDate": "2025-02-25T22:28:01.04325",
+                                    "status": "IN_PROGRESS",
+                                    "userId": 0
+                                },
+                                "message": "Data updated successfully!",
+                                "status": 200
+                            }"""))),
+            @ApiResponse(responseCode = "400",
+                    description = "Task already started",
+                    content = @Content(examples = @ExampleObject(value = """
+                            {
+                                "data": null,
+                                "message": "Task already started",
+                                "status": 400
+                            }"""))),
+            @ApiResponse(responseCode = "400",
+                    description = "Already finished task",
+                    content = @Content(examples = @ExampleObject(value = """
+                            {
+                                "data": null,
+                                "message": "Already finished task",
+                                "status": 400
+                            }"""))),
+            @ApiResponse(responseCode = "404",
+                    description = "There is no entity in the database with the provided ID.",
+                    content = @Content(examples = @ExampleObject(value = """
+                            {
+                                "data": null,
+                                "message": "Entity not found!",
+                                "status": 404
+                            }""")))
+    })
     @PutMapping("/start/{id}")
     public ResponseEntity<?> startTask(@PathVariable("id") Long id) {
         var user = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -319,9 +371,53 @@ public class TaskController extends CrudController<TaskDto> {
 
         } catch (AlreadyStartedTaskException | AlreadyFinishedTaskException error) {
             return ResponseHandler.generateResponse(ResponseEntity.badRequest().build(), error.getMessage());
+        } catch (NoSuchElementException error) {
+            return ResponseHandler.generateResponse(ResponseEntity.notFound().build(), EnumMessage.ENTITY_NOT_FOUND_MESSAGE.message());
         }
     }
 
+    @Operation(summary = "Complete a Task", description = "Complete the task with the provided ID.")
+    @ApiResponses( value = {
+            @ApiResponse(responseCode = "200",
+                    description = "Task completed",
+                    content = @Content(examples = @ExampleObject(value = """
+                            {
+                                "data": {
+                                    "id": 0,
+                                    "title": "Some Task",
+                                    "description": "Some Description",
+                                    "dueDate": "2025-02-19T00:00:00.000000",
+                                    "status": "COMPLETED",
+                                    "userId": 0
+                                },
+                                "message": "Data updated successfully!",
+                                "status": 200
+                            }"""))),
+            @ApiResponse(responseCode = "400",
+                    description = "Non started task",
+                    content = @Content(examples = @ExampleObject(value = """
+                            {
+                                "data": null,
+                                "message": "Non started task",
+                                "status": 400
+                            }"""))),
+            @ApiResponse(responseCode = "400",
+                    description = "Already finished task",
+                    content = @Content(examples = @ExampleObject(value = """
+                            {
+                                "data": null,
+                                "message": "Already finished task",
+                                "status": 400
+                            }"""))),
+            @ApiResponse(responseCode = "404",
+                    description = "There is no entity in the database with the provided ID.",
+                    content = @Content(examples = @ExampleObject(value = """
+                            {
+                                "data": null,
+                                "message": "Entity not found!",
+                                "status": 404
+                            }""")))
+    })
     @PutMapping("/complete/{id}")
     public ResponseEntity<?> completeTask(@PathVariable("id") Long id) {
         var user = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -337,6 +433,8 @@ public class TaskController extends CrudController<TaskDto> {
 
         } catch (NonStartedTaskException | AlreadyFinishedTaskException error) {
             return ResponseHandler.generateResponse(ResponseEntity.badRequest().build(), error.getMessage());
-        }
+        } catch (NoSuchElementException error) {
+        return ResponseHandler.generateResponse(ResponseEntity.notFound().build(), EnumMessage.ENTITY_NOT_FOUND_MESSAGE.message());
+    }
     }
 }

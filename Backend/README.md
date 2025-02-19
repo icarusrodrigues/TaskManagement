@@ -29,7 +29,7 @@ mvn spring-boot:run
 
 ## Postman
 
-In the application there is also a [postman collection](Backend/Task Management Collection.postman_collection.json) with all endpoints, and an [environment file](Backend/task-management.postman_environment.json) that contains the backend base url and the variable that will receive the login token.
+In the application there is also a [postman collection](Task_Management_Collection.postman_collection.json) with all endpoints, and an [environment file](Backend/task-management.postman_environment.json) that contains the backend base url and the variable that will receive the login token.
 
 ## Swagger
 

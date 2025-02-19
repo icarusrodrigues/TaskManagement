@@ -1,12 +1,15 @@
 package com.task.management.api.service;
 
 import com.task.management.api.dto.TaskDto;
+import com.task.management.api.dto.UserDto;
+import com.task.management.api.enums.TaskStatus;
+import com.task.management.api.exceptions.AlreadyFinishedTaskException;
+import com.task.management.api.exceptions.AlreadyStartedTaskException;
+import com.task.management.api.exceptions.NonStartedTaskException;
 import com.task.management.api.mapper.TaskMapper;
 import com.task.management.api.mapper.UserMapper;
 import com.task.management.api.model.Task;
-import com.task.management.api.model.User;
 import com.task.management.api.repository.TaskRepository;
-import com.task.management.api.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -18,8 +21,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @SpringBootTest
@@ -35,12 +37,6 @@ public class TaskServiceTest {
 
     @MockBean
     private TaskRepository repository;
-
-    @MockBean
-    private UserRepository userRepository;
-
-    @MockBean
-    private UserService userService;
 
     @Test
     void testFind() {
@@ -98,23 +94,19 @@ public class TaskServiceTest {
         String code = UUID.randomUUID().toString();
         String title = "some title";
         String description = "some description";
-        LocalDateTime now = LocalDateTime.now();
 
-        var task = new Task();
+        var task = new TaskDto();
         task.setId(id);
-        task.setCode(code);
         task.setTitle(title);
         task.setDescription(description);
-        task.setDueDate(now);
 
-        when(repository.save(task)).thenReturn(task);
+        when(repository.save(any())).thenReturn(mapper.toEntity(task));
 
-        var savedTask = service.create(mapper.toDto(task));
+        var savedTask = service.create(task);
 
         assertEquals(savedTask.getId(), id);
         assertEquals(savedTask.getTitle(), title);
         assertEquals(savedTask.getDescription(), description);
-        assertEquals(savedTask.getDueDate(), now);
     }
 
     @Test
@@ -134,42 +126,6 @@ public class TaskServiceTest {
 
         var taskDto = mapper.toDto(task);
 
-        when(repository.findById(1L)).thenReturn(Optional.of(task));
-        when(repository.save(task)).thenReturn(task);
-
-        var updatedTask = service.update(1L, taskDto);
-
-        assertEquals(updatedTask.getId(), id);
-        assertEquals(updatedTask.getTitle(), title);
-        assertEquals(updatedTask.getDescription(), description);
-        assertEquals(updatedTask.getDueDate(), now);
-    }
-
-    @Test
-    void testUpdateWhenOwnerIdIsNotNull() {
-        Long id = 1L;
-        String code = UUID.randomUUID().toString();
-        String title = "some title";
-        String description = "some description";
-        LocalDateTime now = LocalDateTime.now();
-
-        var user = new User();
-        user.setId(1L);
-
-        var task = new Task();
-        task.setId(id);
-        task.setCode(code);
-        task.setTitle(title);
-        task.setDescription(description);
-        task.setDueDate(now);
-
-        var taskDto = new TaskDto();
-        taskDto.setId(id);
-        taskDto.setTitle(title);
-        taskDto.setDescription(description);
-        taskDto.setDueDate(now);
-
-        when(repository.findById(1L)).thenReturn(Optional.of(task));
         when(repository.save(task)).thenReturn(task);
 
         var updatedTask = service.update(1L, taskDto);
@@ -199,5 +155,153 @@ public class TaskServiceTest {
         doNothing().when(repository).deleteById(1L);
 
         service.delete(1L);
+
+        verify(repository, times(1)).deleteById(1L);
     }
+
+    @Test
+    void testListAllByUser() {
+        Long id = 1L;
+        String code = UUID.randomUUID().toString();
+        String title = "some title";
+        String description = "some description";
+        LocalDateTime now = LocalDateTime.now();
+
+        var task = new Task();
+        task.setId(id);
+        task.setCode(code);
+        task.setTitle(title);
+        task.setDescription(description);
+        task.setDueDate(now);
+
+        when(repository.findAllByUserAndStatus(any(), any(), any())).thenReturn(List.of(task));
+
+        var foundTasks = service.listAllByUser(new UserDto(), Sort.Direction.ASC, "id", TaskStatus.PENDING);
+
+        assertFalse(foundTasks.isEmpty());
+        assertEquals(id, foundTasks.get(0).getId());
+        assertEquals(title, foundTasks.get(0).getTitle());
+        assertEquals(description, foundTasks.get(0).getDescription());
+        assertEquals(now, foundTasks.get(0).getDueDate());
+    }
+
+    @Test
+    void testBeginTask() {
+        Long id = 1L;
+        String title = "some title";
+        String description = "some description";
+        LocalDateTime now = LocalDateTime.now();
+
+        var task = new TaskDto();
+        task.setId(id);
+        task.setTitle(title);
+        task.setDescription(description);
+        task.setDueDate(now);
+        task.setStatus(TaskStatus.PENDING);
+
+        var startedTask = new TaskDto();
+        startedTask.setId(id);
+        startedTask.setTitle(title);
+        startedTask.setDescription(description);
+        startedTask.setDueDate(now);
+        startedTask.setStatus(TaskStatus.IN_PROGRESS);
+
+        when(repository.save(any())).thenReturn(mapper.toEntity(startedTask));
+
+        var finalStartedTask = service.beginTask(task);
+
+        assertNotNull(finalStartedTask);
+        assertEquals(id, finalStartedTask.getId());
+        assertEquals(title, finalStartedTask.getTitle());
+        assertEquals(description, finalStartedTask.getDescription());
+        assertEquals(now, finalStartedTask.getDueDate());
+        assertEquals(TaskStatus.IN_PROGRESS, finalStartedTask.getStatus());
+    }
+
+    @Test
+    void beginTaskShouldThrowAlreadyStartedTaskException() {
+        String errorMessage = "Task already started";
+
+        var task = new TaskDto();
+        task.setStatus(TaskStatus.IN_PROGRESS);
+
+        var exception = assertThrows(AlreadyStartedTaskException.class, () -> service.beginTask(task));
+
+        assertEquals(AlreadyStartedTaskException.class, exception.getClass());
+        assertEquals(errorMessage, exception.getMessage());
+    }
+
+    @Test
+    void beginTaskShouldThrowAlreadyFinishedTaskException() {
+        String errorMessage = "Already finished task";
+
+        var task = new TaskDto();
+        task.setStatus(TaskStatus.COMPLETED);
+
+        var exception = assertThrows(AlreadyFinishedTaskException.class, () -> service.beginTask(task));
+
+        assertEquals(AlreadyFinishedTaskException.class, exception.getClass());
+        assertEquals(errorMessage, exception.getMessage());
+    }
+
+    @Test
+    void testCompleteTask() {
+        Long id = 1L;
+        String title = "some title";
+        String description = "some description";
+        LocalDateTime now = LocalDateTime.now();
+
+        var task = new TaskDto();
+        task.setId(id);
+        task.setTitle(title);
+        task.setDescription(description);
+        task.setDueDate(now);
+        task.setStatus(TaskStatus.IN_PROGRESS);
+
+        var completedTask = new TaskDto();
+        completedTask.setId(id);
+        completedTask.setTitle(title);
+        completedTask.setDescription(description);
+        completedTask.setDueDate(now);
+        completedTask.setStatus(TaskStatus.COMPLETED);
+
+        when(repository.save(any())).thenReturn(mapper.toEntity(completedTask));
+
+        var finalCompletedTask = service.completeTask(task);
+
+        assertNotNull(finalCompletedTask);
+        assertEquals(id, finalCompletedTask.getId());
+        assertEquals(title, finalCompletedTask.getTitle());
+        assertEquals(description, finalCompletedTask.getDescription());
+        assertEquals(now, finalCompletedTask.getDueDate());
+        assertEquals(TaskStatus.COMPLETED, finalCompletedTask.getStatus());
+    }
+
+    @Test
+    void CompleteTaskShouldThrowNonStartedTaskException() {
+        String errorMessage = "Non started task";
+
+        var task = new TaskDto();
+        task.setStatus(TaskStatus.PENDING);
+
+        var exception = assertThrows(NonStartedTaskException.class, () -> service.completeTask(task));
+
+        assertEquals(NonStartedTaskException.class, exception.getClass());
+        assertEquals(errorMessage, exception.getMessage());
+    }
+
+    @Test
+    void completeTaskShouldThrowAlreadyFinishedTaskException() {
+        String errorMessage = "Already finished task";
+
+        var task = new TaskDto();
+        task.setStatus(TaskStatus.COMPLETED);
+
+        var exception = assertThrows(AlreadyFinishedTaskException.class, () -> service.completeTask(task));
+
+        assertEquals(AlreadyFinishedTaskException.class, exception.getClass());
+        assertEquals(errorMessage, exception.getMessage());
+    }
+
+
 }

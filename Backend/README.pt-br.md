@@ -23,6 +23,8 @@ mvn spring-boot:run
 > - **Usuário:** admin
 > - **E-mail:** admin@admin.com
 > - **Senha:** admin
+> 
+> Com esse usuário é possível utilizar todos os endpoints do Backend, mas apenas via postman, ainda não é possível acessar as funcionalidades via Frontend.
 
 > [!NOTE]  
 > É possível criar seu próprio usuário, mas ele será do tipo USER, que não tem acesso a certas funcionalidades no backend.

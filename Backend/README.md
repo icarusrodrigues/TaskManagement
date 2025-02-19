@@ -23,13 +23,15 @@ mvn spring-boot:run
 > - **Username**: admin
 > - **Email**: admin@admin.com
 > - **Password**: admin
+> 
+> With this user it is possible to use all Backend endpoints, but only via postman, it is not yet possible to access the features via Frontend.
 
 > [!NOTE]  
 > It is possible to create your own user, but it will be of type USER, which cannot access certain functionalities in the backend.
 
 ## Postman
 
-In the application there is also a [postman collection](Task_Management_Collection.postman_collection.json) with all endpoints, and an [environment file](Backend/task-management.postman_environment.json) that contains the backend base url and the variable that will receive the login token.
+In the application there is also a [postman collection](Task_Management_Collection.postman_collection.json) with all endpoints, and an [environment file](task-management.postman_environment.json) that contains the backend base url and the variable that will receive the login token.
 
 ## Swagger
 

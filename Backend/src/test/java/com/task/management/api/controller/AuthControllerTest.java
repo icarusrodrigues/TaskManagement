@@ -20,6 +20,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.NoSuchElementException;
+import java.util.Optional;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
@@ -64,7 +65,7 @@ public class AuthControllerTest {
         savedUser.setEmail(email);
         savedUser.setUserType(UserType.ADMIN);
 
-        when(userService.findByUsername(login.getUsername())).thenReturn(savedUser);
+        when(userService.findByUsername(login.getUsername())).thenReturn(Optional.of(savedUser));
         when(userService.getUserEntityFindByUsername(login.getUsername())).thenReturn(userMapper.toEntity(savedUser));
 
         given().log().all()
@@ -94,7 +95,7 @@ public class AuthControllerTest {
         savedUser.setUsername(username);
         savedUser.setPassword(passwordEncoder.encode(password));
 
-        when(userService.findByUsername(login.getUsername())).thenReturn(savedUser);
+        when(userService.findByUsername(login.getUsername())).thenReturn(Optional.of(savedUser));
 
         given().log().all()
                 .when()
@@ -120,7 +121,8 @@ public class AuthControllerTest {
         login.setUsername(username);
         login.setPassword(password);
 
-        doThrow(new NoSuchElementException()).when(userService).findByUsername(login.getUsername());
+        when(userService.findByUsername(login.getUsername())).thenReturn(Optional.empty());
+        when(userService.findByEmail(login.getUsername())).thenReturn(Optional.empty());
 
         given().log().all()
                 .when()
@@ -130,7 +132,7 @@ public class AuthControllerTest {
                 .then().log().all()
                 .statusCode(400)
                 .body("data", equalTo(null))
-                .body("message", equalTo("User or password doesn't match!"))
+                .body("message", equalTo("User not found!"))
                 .body("status", equalTo(400));;
     }
 

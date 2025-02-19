@@ -38,8 +38,8 @@ public class UserServiceTest {
 
         var foundUser = service.findByUsername(username);
 
-        assertEquals(foundUser.getId(), id);
-        assertEquals(foundUser.getUsername(), username);
+        assertEquals(foundUser.get().getId(), id);
+        assertEquals(foundUser.get().getUsername(), username);
     }
 
     @Test

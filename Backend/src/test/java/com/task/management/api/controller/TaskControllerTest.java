@@ -84,7 +84,7 @@ public class TaskControllerTest {
         headers.put("Authorization", "Bearer " + token);
 
         when(userDetailsService.loadUserByUsername(loggedUser.getUsername())).thenReturn(getLoggedUserDetails());
-        when(userService.findByUsername(loggedUser.getUsername())).thenReturn(userMapper.toDto(getLoggedUser()));
+        when(userService.findByUsername(loggedUser.getUsername())).thenReturn(Optional.ofNullable(userMapper.toDto(getLoggedUser())));
 
         return headers;
     }
@@ -237,7 +237,7 @@ public class TaskControllerTest {
         taskDto.setDescription(description);
         taskDto.setDueDate(now);
 
-        when(userService.findByUsername(getLoggedUser().getUsername())).thenReturn(userMapper.toDto(getLoggedUser()));
+        when(userService.findByUsername(getLoggedUser().getUsername())).thenReturn(Optional.ofNullable(userMapper.toDto(getLoggedUser())));
 
         given().log().all()
                 .when()

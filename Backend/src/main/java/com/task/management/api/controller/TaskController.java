@@ -73,7 +73,7 @@ public class TaskController extends CrudController<TaskDto> {
     @PreAuthorize("hasAnyAuthority('USER', 'ADMIN')")
     public ResponseEntity<?> getById(@PathVariable("id") Long id) {
         var user = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        var foundUser = userService.findByUsername(user.getUsername());
+        var foundUser = userService.findByUsername(user.getUsername()).get();
 
         try {
             var foundTask = service.find(id);
@@ -151,7 +151,7 @@ public class TaskController extends CrudController<TaskDto> {
                                              @RequestParam(name = "property", defaultValue = "dueDate") String property,
                                              @RequestParam(name = "status", defaultValue = "PENDING") TaskStatus status) {
         var user = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        var foundUser = userService.findByUsername(user.getUsername());
+        var foundUser = userService.findByUsername(user.getUsername()).get();
 
         try {
             return ResponseHandler.generateResponse(ResponseEntity.ok(service.listAllByUser(foundUser, direction, property, status)), EnumMessage.GET_MESSAGE.message());
@@ -188,7 +188,7 @@ public class TaskController extends CrudController<TaskDto> {
     @PreAuthorize("hasAnyAuthority('USER', 'ADMIN')")
     public ResponseEntity<?> create(@RequestBody @Valid TaskDto dto){
         var user = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        var foundUser = userService.findByUsername(user.getUsername());
+        var foundUser = userService.findByUsername(user.getUsername()).get();
 
         dto.setUserId(foundUser.getId());
         dto.setStatus(TaskStatus.PENDING);
@@ -236,7 +236,7 @@ public class TaskController extends CrudController<TaskDto> {
     @PreAuthorize("hasAnyAuthority('USER', 'ADMIN')")
     public ResponseEntity<?> update(@PathVariable("id") Long id, @RequestBody TaskDto dto) {
         var user = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        var foundUser = userService.findByUsername(user.getUsername());
+        var foundUser = userService.findByUsername(user.getUsername()).get();
 
         try {
             var foundTask = service.find(id);
@@ -289,7 +289,7 @@ public class TaskController extends CrudController<TaskDto> {
     @PreAuthorize("hasAnyAuthority('USER', 'ADMIN')")
     public ResponseEntity<?> delete(@PathVariable("id") Long id) {
         var user = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        var foundUser = userService.findByUsername(user.getUsername());
+        var foundUser = userService.findByUsername(user.getUsername()).get();
 
         try {
             var foundTask = service.find(id);
@@ -307,7 +307,7 @@ public class TaskController extends CrudController<TaskDto> {
     @PutMapping("/start/{id}")
     public ResponseEntity<?> startTask(@PathVariable("id") Long id) {
         var user = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        var foundUser = userService.findByUsername(user.getUsername());
+        var foundUser = userService.findByUsername(user.getUsername()).get();
 
         try {
             var foundTask = service.find(id);
@@ -325,7 +325,7 @@ public class TaskController extends CrudController<TaskDto> {
     @PutMapping("/complete/{id}")
     public ResponseEntity<?> completeTask(@PathVariable("id") Long id) {
         var user = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        var foundUser = userService.findByUsername(user.getUsername());
+        var foundUser = userService.findByUsername(user.getUsername()).get();
 
         try {
             var foundTask = service.find(id);

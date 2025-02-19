@@ -4,7 +4,7 @@ const FilteredTasks = (props) => {
 
     return (<>
         <div className='flex flex-column w-full'>
-            <h2 className='p-2'>{props.name}</h2>
+            <h2 className='p-2' style={{color: `var(--blue-900)`, textDecoration: 'underline'}}>{props.name}</h2>
             <ul className='flex flex-row flex-wrap list-none justify-content-evenvly p-0'>
                 {
                     (props.tasks ?? []).map((task) => (

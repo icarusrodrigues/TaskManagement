@@ -1,29 +1,34 @@
+import { useState, useRef } from 'react';
+import { useForm } from 'react-hook-form';
+import { useNavigate } from 'react-router-dom';
 import { Button } from 'primereact/button';
 import { IconField } from 'primereact/iconfield';
 import { InputIcon } from 'primereact/inputicon';
 import { InputText } from "primereact/inputtext";
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { useNavigate } from 'react-router-dom';
+import { Toast } from 'primereact/toast';
 import { API } from '../services';
 
 const Login = () => {
     const [showPassword, setShowPassword] = useState(false);
-
     const {register, handleSubmit} = useForm();
-
     const navigate = useNavigate();
+    const toast = useRef(null);
 
     async function createUser(dados) {
-        const loginRequest = await API.post("auth/sign-up", dados);
-        if (loginRequest.status === 200) {
-            navigate("/");
+        try {
+            const loginRequest = await API.post("auth/sign-up", dados);
+            if (loginRequest.status === 200) {
+                navigate("/");
+            }
+        } catch (error){
+            toast.current.show({ severity: 'error', summary: 'Error', detail: error.response.data.message, life: 3000 });
         }
     }
 
     return ( 
         <>
-            <div className='bg-primary-500 h-screen max-w-full flex flex-column align-items-center justify-content-center px-3'>
+            <Toast ref={toast} />
+            <div className='bg-blue-600 h-screen max-w-full flex flex-column align-items-center justify-content-center px-3'>
                 <h2 className='uppercase'>Task Management</h2>
                 <form onSubmit={handleSubmit(createUser)} className='col-12 lg:col-5 md:col-6 surface-0 p-3 border-round-md bg-white'>
                     <h3 style={{color: 'var(--blue-900)'}} className='text-center text-4xl'>Welcome!</h3>
@@ -71,7 +76,7 @@ const Login = () => {
                             label="Register"
                             type="submit"
                             style={{color: 'var(--white)'}}
-                            className='bg-blue-800'/>
+                            className='bg-blue-600'/>
 
                         <Button 
                             label='Already have an account? Login'
@@ -80,7 +85,7 @@ const Login = () => {
                                 () => { navigate("/"); }
                             }
                             style={{color: 'var(--white)'}}
-                            className='bg-blue-800'/>
+                            className='bg-blue-600'/>
                     </div>
                 </form>
             </div>

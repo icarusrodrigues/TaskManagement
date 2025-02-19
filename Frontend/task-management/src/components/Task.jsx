@@ -9,9 +9,12 @@ import { ScrollPanel } from 'primereact/scrollpanel';
 import { confirmDialog } from 'primereact/confirmdialog';
 import { API } from '../services';
 import Cookies from 'js-cookie';
+import { Toast } from 'primereact/toast';
 
 const Task = (props) => {
     const op = useRef(null);
+    const toast = useRef(null);
+
     const {register, handleSubmit} = useForm();
     
     const [idToUpdate, setIdToUpdate] = useState(0);    
@@ -21,12 +24,16 @@ const Task = (props) => {
 
     function formatDate(date) {
         const formattedDate = new Date(date);
-        return `${formattedDate.getDate()}/${String(formattedDate.getMonth() + 1).padStart(2, '0')}/${formattedDate.getFullYear()} ${formattedDate.getHours()}:${String(formattedDate.getMinutes()).padStart(2, '0')}`;
+        return `${formattedDate.getDate()}/${String(formattedDate.getMonth() + 1).padStart(2, '0')}/${formattedDate.getFullYear()} ${String(formattedDate.getHours()).padStart(2, '0')}:${String(formattedDate.getMinutes()).padStart(2, '0')}`;
     }
 
     function formatDateToServer(date) {
         const formattedDate = new Date(date);
-        return `${formattedDate.getFullYear()}-${String(formattedDate.getMonth() + 1).padStart(2, '0')}-${formattedDate.getDate()}T${formattedDate.getHours()}:${String(formattedDate.getMinutes()).padStart(2, '0')}:00`;
+        return `${formattedDate.getFullYear()}-${String(formattedDate.getMonth() + 1).padStart(2, '0')}-${formattedDate.getDate()}T${String(formattedDate.getHours()).padStart(2, '0')}:${String(formattedDate.getMinutes()).padStart(2, '0')}:00`;
+    }
+
+    function formatStatus(status) {
+        return ((status ?? '').replace("_", " ").toLowerCase());
     }
 
     const confirmDelete = (id) => {
@@ -39,17 +46,42 @@ const Task = (props) => {
         });
     }
 
+    const confirmUpdate = (task) => {
+        confirmDialog({
+            message: 'Do you want to update this task?',
+            header: 'Update Confirmation',
+            icon: 'pi pi-info-circle',
+            accept: () => updateTask(task),
+            reject: () => null
+        });
+    }
+
     async function updateTask(task) {
         const actualStatus = props.task.status;
+
+        if (task.title === '') {
+            toast.current.show({ severity: 'error', summary: 'Error', detail: 'Title cannot be empty!', life: 3000 });
+            return;
+        }
+
+        if (task.description === '') {
+            toast.current.show({ severity: 'error', summary: 'Error', detail: 'Description cannot be empty!', life: 3000 });
+            return;
+        }
 
         if (dueDateToUpdate) {
             task.dueDate = formatDateToServer(dueDateToUpdate);
         }
-        await API.put(`/tasks/${idToUpdate}`, task, {
-            headers: {
-                Authorization: `Bearer ${Cookies.get('token')}`
-            }
-        });
+
+        try {
+            await API.put(`/tasks/${idToUpdate}`, task, {
+                headers: {
+                    Authorization: `Bearer ${Cookies.get('token')}`
+                }
+            });
+        } catch (error) {
+            toast.current.show({ severity: 'error', summary: 'Error', detail: error.response.data.message, life: 3000 });
+        }
         
         await props.searchTasks(actualStatus);
     }
@@ -92,20 +124,21 @@ const Task = (props) => {
     
     return (
         <>
-            <article className='shadow-4 p-3 border-round-md bg-gray-600'>
+            <Toast ref={toast}/>
+            <article className='bg-bluegray-100 shadow-5 p-3 border-round-md mb-2'>
                 <div className='flex flex-row justify-content-between align-items-center mb-3'>
-                    <h3 className='mt-0 mb-0 white-space-nowrap overflow-hidden text-overflow-ellipsis'>{props.task.title}</h3>
+                    <h3 className='mt-0 mb-0 white-space-nowrap overflow-hidden text-overflow-ellipsis' style={{color: `var(--blue-900)`, textDecoration: 'underline'}}>{props.task.title}</h3>
                     <div className='flex flex-column md:flex-row justify-content-between align-items-center gap-1'>
                         {(() => {
                             switch (props.task.status) {
                                 case 'PENDING': case 'IN_PROGRESS':
                                     return <Button className='border-none border-round-sm' icon='pi pi-pencil' onClick={(e) => {
-                                    setIdToUpdate(props.task.id);
-                                    setTitleToUpdate(props.task.title);
-                                    setDescriptionToUpdate(props.task.description);
-                                    setDueDateToUpdate(props.task.dueDate);
+                                        setIdToUpdate(props.task.id);
+                                        setTitleToUpdate(props.task.title);
+                                        setDescriptionToUpdate(props.task.description);
+                                        setDueDateToUpdate(props.task.dueDate);
 
-                                    op.current.toggle(e);}}/>
+                                        op.current.toggle(e);}}/>
                                 default:
                                     return null;
                             }
@@ -121,7 +154,7 @@ const Task = (props) => {
                 <OverlayPanel ref={op} id="overlaypanel" style={{width: '450px'}}>
                     <div className="flex flex-column">
                         <h2 className="p-2">Edit Task</h2>
-                        <form onSubmit={handleSubmit(updateTask)}>
+                        <form onSubmit={handleSubmit(confirmUpdate)}>
                             <label style={{color: 'var(--blue-900)'}} htmlFor="title" className='block uppercase font-bold text-sm mb-1'>Title</label>
                             <InputText 
                                 id="title" 
@@ -164,17 +197,21 @@ const Task = (props) => {
                             <Button
                                 label='Update Task'
                                 type='submit'
-                                className='bg-blue-800 text-white border-none border-round-sm'/>
+                                className='bg-blue-600 text-white border-none border-round-sm'/>
                         </form>
                     </div>
                 </OverlayPanel>
 
-                <ScrollPanel style={{ width: '100%', height: '150px', marginBottom: '1rem' }} >
-                    <p className='mt-0 max-h-8rem text-primary'>{props.task.description}</p>
+                <ScrollPanel style={{ width: '100%', height: '150px', marginBottom: '1rem'}}>
+                    <p className='mt-0 max-h-8rem' style={{color: `var(--blue-600)`, lineBreak: 'anywhere'}}>{props.task.description}</p>
                 </ScrollPanel>
-                <h6 className='mt-0 text-primary'>{props.task.status}</h6>
+
+                <h6 className='mt-0' style={{fontSize: '1rem' , color: `var(--blue-600)`, textTransform: 'capitalize'}}>
+                    {formatStatus(props.task.status)}
+                </h6>
+
                 <div className='flex flex-row justify-content-between align-items-center'>
-                    <p className='my-0 text-primary'>{formatDate(props.task.dueDate)}</p>
+                    <p className='my-0' style={{color: `var(--blue-600)`}}>{formatDate(props.task.dueDate)}</p>
                     {(() => {
                         switch (props.task.status) {
                             case 'PENDING':

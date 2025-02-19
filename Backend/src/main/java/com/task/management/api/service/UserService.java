@@ -8,6 +8,8 @@ import com.task.management.api.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 public class UserService extends CrudService<UserDto, User> {
 
@@ -19,8 +21,12 @@ public class UserService extends CrudService<UserDto, User> {
         super(mapper, repository);
     }
 
-    public UserDto findByUsername(String username){
-        return userRepository.findByUsername(username).map(mapper::toDto).orElseThrow();
+    public Optional<UserDto> findByUsername(String username){
+        return userRepository.findByUsername(username).map(mapper::toDto);
+    }
+
+    public Optional<UserDto> findByEmail(String email){
+        return userRepository.findByEmail(email).map(mapper::toDto);
     }
 
     public User getUserEntityFindByUsername(String username) {

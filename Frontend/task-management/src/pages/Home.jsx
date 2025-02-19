@@ -47,7 +47,7 @@ const Home = () => {
             }
         });
 
-        searchTasks();
+        window.location.reload();
     }
 
     async function searchTasks() {        
@@ -91,8 +91,8 @@ const Home = () => {
 
     return ( 
         <>
-            <div className="bg-primary-500 h-full max-w-full min-h-screen flex flex-column p-4">
-                <header className="flex flex-row justify-content-between align-items-center">
+            <div className="h-full max-w-full min-h-screen flex flex-column">
+                <header className="bg-blue-600 flex flex-row justify-content-between align-items-center p-4">
                     <div>
                         <h1 className="p-2">Task List</h1>
                         <Dropdown value={selectedStatus} 
@@ -111,7 +111,7 @@ const Home = () => {
                             type="button"
                             style={{color: 'var(--white)'}}
                             onClick={(e) => {op.current.toggle(e)}}
-                            className='bg-blue-800'/>
+                            className='bg-blue-600'/>
                         <Button 
                             label='Logout'
                             type="button"
@@ -120,7 +120,7 @@ const Home = () => {
                                 Cookies.remove("token");
                                 setLogged(false); 
                                 navigate("/");}}
-                            className='bg-blue-800 min-w-max'/>
+                            className='bg-blue-600 min-w-max'/>
                     </div>
                 </header>
 
@@ -173,15 +173,15 @@ const Home = () => {
                                 <Button 
                                     label='Create Task'
                                     type="submit"
-                                    className='bg-blue-800'/>
+                                    className='bg-blue-600'/>
                             </div>
                         </form>
                     </div>
                 </OverlayPanel>
                 
-                <main>
+                <main className='p-4 bg-white'>
                     <ConfirmDialog/>
-                    <section className="flex flex-row justify-content-between">
+                    <section className="flex flex-row justify-content-evenly">
                         {(() => {
                             switch (selectedStatus.code) {
                                 case 'PENDING':

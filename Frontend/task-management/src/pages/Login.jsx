@@ -32,11 +32,11 @@ const Login = () => {
     return ( 
         <>
             <Toast ref={toast} />
-            <div className='bg-primary-500 h-screen max-w-full flex flex-column align-items-center justify-content-center px-3'>
+            <div className='bg-blue-600 h-screen max-w-full flex flex-column align-items-center justify-content-center px-3'>
                 <h2 className='uppercase'>Task Management</h2>
                 <form onSubmit={handleSubmit(login)} className='col-12 lg:col-5 md:col-6 surface-0 p-3 border-round-md bg-white'>
                     <h3 style={{color: 'var(--blue-900)'}} className='text-center text-4xl'>Welcome!</h3>
-                    <label style={{color: 'var(--blue-900)'}} htmlFor="username" className='block uppercase font-bold text-sm mb-1'>Username</label>
+                    <label style={{color: 'var(--blue-900)'}} htmlFor="username" className='block uppercase font-bold text-sm mb-1'>Username or Email</label>
                     <InputText 
                         id="username" 
                         placeholder="username"
@@ -68,7 +68,7 @@ const Login = () => {
                             label="Login"
                             type="submit"
                             style={{color: 'var(--white)'}}
-                            className='bg-blue-800'/>
+                            className='bg-blue-600'/>
 
                         <Button 
                             label='Create Account'
@@ -77,7 +77,7 @@ const Login = () => {
                                 () => { navigate("/register"); }
                             }
                             style={{color: 'var(--white)'}}
-                            className='bg-blue-800'/>
+                            className='bg-blue-600'/>
                     </div>
                 </form>
             </div>
